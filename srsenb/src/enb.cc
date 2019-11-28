@@ -27,6 +27,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <memory>
+
 namespace srsenb {
 
 enb*            enb::instance      = nullptr;
@@ -112,6 +114,12 @@ int enb::init(const all_args_t& args_)
     return SRSLTE_ERROR;
   }
 
+  auto lte_empowerAgent = std::make_unique<Empower::Agent::Agent>();
+  if (!lte_empowerAgent) {
+    log.console("Error initializing Empower agent.\n");
+    return SRSLTE_ERROR;
+  }
+
   // Init layers
   if (lte_radio->init(args.rf, lte_phy.get())) {
     log.console("Error initializing radio.\n");
@@ -128,11 +136,16 @@ int enb::init(const all_args_t& args_)
     return SRSLTE_ERROR;
   }
 
+  if (lte_empowerAgent->init()) {
+      return SRSLTE_ERROR;
+  }
+
   stack = std::move(lte_stack);
   phy   = std::move(lte_phy);
   radio = std::move(lte_radio);
+  empowerAgent = std::move(lte_empowerAgent);
 
-  log.console("\n==== eNodeB started ===\n");
+  log.console("\n==== eNodeB started (with Agent) ===\n");
   log.console("Type <t> to view trace\n");
 
   started = true;

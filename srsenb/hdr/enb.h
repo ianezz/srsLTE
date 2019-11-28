@@ -108,6 +108,19 @@ struct all_args_t {
   stack_args_t      stack;
 };
 
+
+
+namespace Empower {
+namespace Agent {
+class Agent {
+  bool init(void) const {
+    return false;
+  }
+};
+}
+}
+
+ 
 /*******************************************************************************
   Main eNB class
 *******************************************************************************/
@@ -150,6 +163,7 @@ private:
   std::unique_ptr<enb_stack_base>     stack = nullptr;
   std::unique_ptr<srslte::radio_base> radio = nullptr;
   std::unique_ptr<enb_phy_base>       phy   = nullptr;
+  std::unique_ptr<Empower::Agent::Agent>  empowerAgent = nullptr;
 
   srslte::logger_stdout logger_stdout;
   srslte::logger_file   logger_file;
