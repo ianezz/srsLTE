@@ -114,7 +114,7 @@ int enb::init(const all_args_t& args_)
     return SRSLTE_ERROR;
   }
 
-  auto lte_empowerAgent = std::make_unique<Empower::Agent::Agent>();
+  std::unique_ptr<Empower::Agent::Agent> lte_empowerAgent = std::unique_ptr<Empower::Agent::Agent>(new Empower::Agent::Agent());
   if (!lte_empowerAgent) {
     log.console("Error initializing Empower agent.\n");
     return SRSLTE_ERROR;
@@ -145,7 +145,7 @@ int enb::init(const all_args_t& args_)
   radio = std::move(lte_radio);
   empowerAgent = std::move(lte_empowerAgent);
 
-  log.console("\n==== eNodeB started (with Agent) ===\n");
+  log.console("\n==== eNodeB started (with Empower Agent!!!) ===\n");
   log.console("Type <t> to view trace\n");
 
   started = true;
