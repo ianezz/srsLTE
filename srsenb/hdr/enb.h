@@ -113,6 +113,7 @@ struct all_args_t {
 namespace Empower {
 namespace Agent {
 class Agent {
+ public:
   bool init(void) const {
     return false;
   }
