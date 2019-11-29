@@ -144,6 +144,7 @@ int enb::init(const all_args_t& args_)
   phy   = std::move(lte_phy);
   radio = std::move(lte_radio);
   empowerAgent = std::move(lte_empowerAgent);
+  empowerAgent->start();
 
   log.console("\n==== eNodeB started (with Empower Agent!!!) ===\n");
   log.console("Type <t> to view trace\n");
