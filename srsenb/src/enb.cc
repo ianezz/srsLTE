@@ -114,6 +114,7 @@ int enb::init(const all_args_t& args_)
     return SRSLTE_ERROR;
   }
 
+  // Create instance of the Empower agent
   std::unique_ptr<Empower::Agent::Agent> lte_empowerAgent = std::unique_ptr<Empower::Agent::Agent>(new Empower::Agent::Agent());
   if (!lte_empowerAgent) {
     log.console("Error initializing Empower agent.\n");

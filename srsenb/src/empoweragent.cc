@@ -10,21 +10,26 @@
 namespace Empower {
 namespace Agent {
 
-struct AgentPrivateBits {
+/// @brief Private attributes of the Empower agent
+struct Agent::PrivateBits {
+    // Identifier of the agent thread
     pthread_t  agentThread;
+    NetworkLib::IPv4Address controllerAddress;
+    std::uint16_t           controllerPort;
 };
 
 Agent::Agent(void) {
-    mPrivateBits = new AgentPrivateBits;
+    mPrivateBits = std::unique_ptr<PrivateBits>(new PrivateBits);
 }
 
 Agent::~Agent() {
-    delete mPrivateBits;
-    mPrivateBits = nullptr;
 }
 
 bool Agent::init(void) {
-    mPrivateBits = new AgentPrivateBits;
+    // mPrivateBits->controllerAddress = ...
+    // mPrivateBits->contorllerPort = ...
+
+    // No error occurred while initializing
     return false;
 }
 
@@ -48,9 +53,6 @@ void Agent::start() {
     }    
 }
 
-void Agent::stop() {
-}
-
 
 void * Agent::run(void *arg) {
     Agent *thisInstance = reinterpret_cast<Agent *>(arg);
@@ -68,13 +70,30 @@ void Agent::mainLoop() {
         auto writeBuffer = io.makeMessageBuffer();
 
         for (;;) {
+
+            bool performPeriodicTasks = false;
+            bool dataIsAvailable = false;
+
             if (io.isConnectionClosed()) {
-                io.openListeningSocket();
+                io.openSocket();
             }
 
-            // Wait at most 1500 milliseconds for connections/data
-            if (io.isDataAvailable(1500)) {
+            // Retest
+            if (io.isConnectionClosed()) {
+                // Connection still closed. Sleep for a while
+                io.sleep();
+                performPeriodicTasks = true;
+            } else {
+                // The connection is opened. Let's see if there's data
+                dataIsAvailable = io.isDataAvailable();
 
+                if (!dataIsAvailable) {
+                    // Timeout expired
+                    performPeriodicTasks = true;
+                }
+            }
+
+            if (dataIsAvailable) {
                 // Read a message
                 auto messageBuffer = io.readMessage(readBuffer);
 
@@ -100,19 +119,19 @@ void Agent::mainLoop() {
                                 MessageEncoder messageEncoder(writeBuffer);
 
                                 messageEncoder.header()
-                                       .messageClass(
-                                           MessageClass::RESPONSE_SUCCESS)
-                                       .entityClass(
-                                           EntityClass::ECHO_SERVICE);
+                                    .messageClass(
+                                        MessageClass::RESPONSE_SUCCESS)
+                                    .entityClass(
+                                        EntityClass::ECHO_SERVICE);
 
                                 messageEncoder.add(tlv).end();
 
                                 std::cout << "Sending back reply\n"
-                                    << messageEncoder.data();
+                                          << messageEncoder.data();
 
                                 // Write a message to the socket
                                 size_t len =
-                                       io.writeMessage(messageEncoder.data());
+                                    io.writeMessage(messageEncoder.data());
 
                                 std::cout << "Wrote " << len << " bytes\n";
                             }
@@ -125,21 +144,29 @@ void Agent::mainLoop() {
                         }
                     }
                 }
+            } else if (performPeriodicTasks) {
+                // Timeout expired
+                std::cout << "AGENT: still waiting for messages... "
+                             "(isConnectionClosed() is "
+                          << io.isConnectionClosed() << ")\n";
+
+
+                if (! io.isConnectionClosed()) {
+                    // TODO: Here I'd send a HELLO request to the controller.
+                    //                     
+                }
+
             } else {
-                // Timeout expired. Do something else here before
-                // waiting again.
-                std::cout << "AGENT: still waiting for messages...\n";
+                // We should never end here.
+                // throw ...
             }
         }
 
     } catch (std::exception &e) {
         std::cerr << "Caught exception in main agent loop: " << e.what()
-            << '\n';
+                  << '\n';
     }
-
 }
-
-
 
 } // namespace Agent
 } // namespace Empower

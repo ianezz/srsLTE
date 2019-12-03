@@ -1,32 +1,35 @@
 #ifndef EMPOWER_AGENT_H
 #define EMPOWER_AGENT_H
 
+// For srslte::logger
+#include "srslte/common/logger.h"
+
 // For std::unique_ptr<T>
 #include <memory>
 
 namespace Empower {
 namespace Agent {
 
-struct AgentPrivateBits;
-
 class Agent {
 public:
     Agent();
     ~Agent();
-    
+
+    /// @brief Initialize the agent
     bool init(void);
 
+    /// @brief Start the agent main loop in its own thread.
     void start();
-    void stop();
   private:
+    // Helper method
     static void *run(void *arg);
 
-    
+    // The agent main loop.
     void mainLoop();
 
-    // Note: not a std::unique_ptr<AgentPrivateBits> because it's an
-    // incomplete type.
-    AgentPrivateBits *mPrivateBits;
+    // Private bits of the Agent (using PIMPL idiom).
+    struct PrivateBits;
+    std::unique_ptr<PrivateBits> mPrivateBits;
 };
 
 }
