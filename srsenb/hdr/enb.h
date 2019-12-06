@@ -99,6 +99,12 @@ struct general_args_t {
   std::string eea_pref_list;
 };
 
+struct empoweragent_args_t {
+  std::string controller_addr;
+  uint16_t    controller_port;
+  uint32_t    delayms;
+};
+
 struct all_args_t {
   enb_args_t        enb;
   enb_files_t       enb_files;
@@ -108,6 +114,7 @@ struct all_args_t {
   general_args_t    general;
   phy_args_t        phy;
   stack_args_t      stack;
+  empoweragent_args_t empoweragent;
 };
 
 /*******************************************************************************
@@ -193,4 +200,3 @@ private:
 } // namespace srsenb
 
 #endif // SRSENB_ENB_H
-  

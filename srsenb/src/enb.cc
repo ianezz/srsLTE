@@ -27,8 +27,6 @@
 #include <iostream>
 #include <sstream>
 
-#include <memory>
-
 namespace srsenb {
 
 enb*            enb::instance      = nullptr;
@@ -114,8 +112,9 @@ int enb::init(const all_args_t& args_)
     return SRSLTE_ERROR;
   }
 
-  // Create instance of the Empower agent
-  std::unique_ptr<Empower::Agent::Agent> lte_empowerAgent = std::unique_ptr<Empower::Agent::Agent>(new Empower::Agent::Agent());
+  // Create an instance of the Empower agent
+  std::unique_ptr<Empower::Agent::Agent> lte_empowerAgent =
+      std::unique_ptr<Empower::Agent::Agent>(new Empower::Agent::Agent());
   if (!lte_empowerAgent) {
     log.console("Error initializing Empower agent.\n");
     return SRSLTE_ERROR;
@@ -137,7 +136,8 @@ int enb::init(const all_args_t& args_)
     return SRSLTE_ERROR;
   }
 
-  if (lte_empowerAgent->init()) {
+  // Init the Empower agent
+  if (lte_empowerAgent->init(args)) {
       return SRSLTE_ERROR;
   }
 
@@ -145,9 +145,14 @@ int enb::init(const all_args_t& args_)
   phy   = std::move(lte_phy);
   radio = std::move(lte_radio);
   empowerAgent = std::move(lte_empowerAgent);
-  empowerAgent->start();
 
-  log.console("\n==== eNodeB started (with Empower Agent!!!) ===\n");
+  // Attempt to start the Empower agent thread
+  if (empowerAgent->start()) {
+    log.console("Error starting the Empower agent thread.\n");
+    return SRSLTE_ERROR;
+  }
+
+  log.console("\n==== eNodeB started ===\n");
   log.console("Type <t> to view trace\n");
 
   started = true;
